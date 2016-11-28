@@ -1,3 +1,5 @@
+import java.awt.AWTException;
+import java.awt.Robot;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
@@ -19,7 +21,34 @@ public class TetrisAI {
 	public TetrisAI() {
 
 	}
+	
+	public void executeMove(State current, int newScoreValue, State rightMove, State upMove, State leftMove,
+			State downMove){
+		String move = makeMove(current, newScoreValue, rightMove, upMove, leftMove,downMove);
+		Robot AIControl = null;
+		try {
+			AIControl = new Robot();
+		} catch (AWTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(move.equals("Up")){
+			AIControl.keyPress(38);
+		}
+		else if(move.equals("Down")){
+			AIControl.keyPress(40);
+		}
+		else if(move.equals("Right")){
+			AIControl.keyPress(38);
+		}
+		else if(move.equals("Left")){
+			AIControl.keyPress(37);
+		}
+	}
 
+	//I have not written a state extraction method yet, but what will happen is
+	//All of these other possible moves will be the game making that state and then
+	//The state extraction method taking it and saving, then taking back the changes
 	public String makeMove(State current, int newScoreValue, State rightMove, State upMove, State leftMove,
 			State downMove) {
 		int reward = newScoreValue - lastScoreValue;
@@ -88,6 +117,7 @@ public class TetrisAI {
 		Random RNG = new Random();
 		double randDecimal = RNG.nextDouble();
 		if (randDecimal < 0.25) {
+			
 			return "Up";
 		} else if (randDecimal >= 0.25 && randDecimal < 0.5) {
 			return "Down";
