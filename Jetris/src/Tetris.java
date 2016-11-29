@@ -462,6 +462,7 @@ public class Tetris extends Applet {
 		if(score > high_score)
 			high_score_label.setText("" + score);
 		sounds.playGameOverSound();
+		newGame();
 	}
 	
 	private boolean rowIsFull(int row) {
