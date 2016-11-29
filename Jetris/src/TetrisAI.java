@@ -1,3 +1,5 @@
+import java.awt.AWTException;
+import java.awt.Robot;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Random;
@@ -19,9 +21,36 @@ public class TetrisAI {
 	public TetrisAI() {
 
 	}
+	
+	public void executeMove(State current, int newScoreValue, State right, State up, State left,
+			State down){
+		String move = makeMove(current, newScoreValue, right, up, left,down);
+		Robot AIControl = null;
+		try {
+			AIControl = new Robot();
+		} catch (AWTException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if(move.equals("Up")){
+			AIControl.keyPress(38);
+		}
+		else if(move.equals("Down")){
+			AIControl.keyPress(40);
+		}
+		else if(move.equals("Right")){
+			AIControl.keyPress(38);
+		}
+		else if(move.equals("Left")){
+			AIControl.keyPress(37);
+		}
+	}
 
-	public String makeMove(State current, int newScoreValue, State rightMove, State upMove, State leftMove,
-			State downMove) {
+	//I have not written a state extraction method yet, but what will happen is
+	//All of these other possible moves will be the game making that state and then
+	//The state extraction method taking it and saving, then taking back the changes
+	public String makeMove(State current, int newScoreValue, State right, State up, State left,
+			State down) {
 		int reward = newScoreValue - lastScoreValue;
 		lastScoreValue = newScoreValue;
 		String move = "";
@@ -55,16 +84,16 @@ public class TetrisAI {
 		}
 		State nextState = null;
 		if(move.equals("Up")){
-			nextState = upMove;
+			nextState = up;
 		}
 		else if(move.equals("Down")){
-			nextState = downMove;
+			nextState = down;
 		}
 		else if(move.equals("Right")){
-			nextState = rightMove;
+			nextState = right;
 		}
 		else if(move.equals("Left")){
-			nextState = leftMove;
+			nextState = left;
 		}
 		double nextTurnQValue = 0;
 		if(stateTable.contains(nextState)){
@@ -88,6 +117,7 @@ public class TetrisAI {
 		Random RNG = new Random();
 		double randDecimal = RNG.nextDouble();
 		if (randDecimal < 0.25) {
+			
 			return "Up";
 		} else if (randDecimal >= 0.25 && randDecimal < 0.5) {
 			return "Down";

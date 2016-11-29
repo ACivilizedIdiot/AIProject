@@ -96,6 +96,7 @@ public class Tetris extends Applet {
 	};
 	private static boolean tmp_grid[][] = new boolean[4][4]; // scratch space
 	private static Random random = new Random();
+	private TetrisAI ai = new TetrisAI();
 	
 	private static class TetrisLabel extends Label {
 		private final static Font LABEL_FONT = new Font("Serif", Font.BOLD, 18);
@@ -105,6 +106,12 @@ public class Tetris extends Applet {
 		}
 		private void addValue(int val) {
 			setText(Integer.toString((Integer.parseInt(getText())) + val ));
+		}
+		
+		public int getValue(){
+			String value = getText();
+			int intValue = Integer.parseInt(value);
+			return intValue;
 		}
 	}
 	
@@ -298,6 +305,7 @@ public class Tetris extends Applet {
 		public void run() {
 			while(true) {
 				try { 
+					//So far is going to be the place where the AI runs
 					sleep(m_fast ? 30 : m_delay); 
 				} catch (Exception e) {}
 				if(m_paused) {
@@ -543,6 +551,12 @@ public class Tetris extends Applet {
 		pause_resume_butt.setLabel("Pause");
 		pause_resume_butt.validate();
 		sounds.playSoundtrack();
+		State current = null;
+		State right = null;
+		State left = null;
+		State up = null;
+		State down = null;
+		ai.executeMove(current, score_label.getValue(), right, up, left, down);
 	}
 	
 	private void newGame() {
@@ -604,6 +618,12 @@ public class Tetris extends Applet {
 						cur_piece.paste();
 					}
 					game_grid.repaint();
+					State current = null;
+					State right = null;
+					State left = null;
+					State up = null;
+					State down = null;
+					ai.executeMove(current, score_label.getValue(), right, up, left, down);
 				}
 				else if (e.getKeyCode() == 38) { //rotate
 					synchronized(timer) {
@@ -614,9 +634,21 @@ public class Tetris extends Applet {
 						cur_piece.paste();
 					}
 					game_grid.repaint();
+					State current = null;
+					State right = null;
+					State left = null;
+					State up = null;
+					State down = null;
+					ai.executeMove(current, score_label.getValue(), right, up, left, down);
 				}
 				if (e.getKeyCode() == 40) { //down arrow pressed; drop piece
 					timer.setFast(true);
+					State current = null;
+					State right = null;
+					State left = null;
+					State up = null;
+					State down = null;
+					ai.executeMove(current, score_label.getValue(), right, up, left, down);
 				}
 			}
 		};
@@ -671,6 +703,10 @@ public class Tetris extends Applet {
 		frame.add(tetris);
 		tetris.init();
 		tetris.start();
+		
+		//Dustin's meddling starts here
+		
+		TetrisAI ai = new TetrisAI();
 
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {

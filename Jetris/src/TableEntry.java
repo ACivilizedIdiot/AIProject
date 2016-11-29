@@ -13,8 +13,8 @@ public class TableEntry {
 		actions = new ActionTable();
 	}
 	
-	public boolean checkState(State oldState){
-		if(state.equals(oldState)){
+	public boolean checkState(State current){
+		if(state.equals(current)){
 			return true;
 		}
 		return false;
