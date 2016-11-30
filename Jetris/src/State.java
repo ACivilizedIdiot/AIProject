@@ -4,7 +4,9 @@
 //as you wish
 public class State {
 	
-	int[][] grid = new int[Tetris.ROWS][Tetris.COLUMNS];
+	static int[][] grid = new int[Tetris.ROWS][Tetris.COLUMNS];
+	static int[] maxColumnHeights = new int[Tetris.COLUMNS];	//used to store max heights for each column (state utility)
+
 	
 	
 	//values to assess utility of state
@@ -12,9 +14,9 @@ public class State {
 	int maxHeight = 0;	//heighest occupied cell in ANY column 
 	int emptyCells = 0;
 		
-	public State(int[][] grid, int empty){
-		this.grid = grid;
-		this.emptyCells = empty;
+	public State(int[][] grid){
+		State.grid = grid;
+		this.emptyCells = numOfEmptyCells();
 		
 	}
 	
@@ -52,7 +54,7 @@ public class State {
 	}
 	
 	public State clone(){
-		return new State(deepClone(grid), emptyCells);
+		return new State(deepClone(grid));
 	}
 	
 	public void printState(){
@@ -62,6 +64,54 @@ public class State {
 //				System.out.println("Empty Cells: " + emptyCells);
 				//System.out.println("Score :" + score);
 	}
+	
+	//NICOLAS
+		//returns maximum height of any column in current state
+		//this will be used for state representation and utility eval
+		private int maxHeight(){
+			int max = 0;
+			 for(int i = 0; i < Tetris.COLUMNS; i++){
+				 if(max < maxColumnHeights[i]){
+					 max = maxColumnHeights[i];
+				 }
+			 }
+			return max;
+		}
+		
+		//NICOLAS
+		//returns array with max height values for each column
+		//this will be used for state representation and utility eval
+		private static int[] maxColumnHeights(){
+			
+			int max = 0;
+			for(int i = Tetris.COLUMNS-1; i >= 0; i--){
+				for(int j = Tetris.ROWS-1; j >= 0; j--){
+					if(grid[j][i] != -1){
+						max = Tetris.ROWS - j;
+					}
+					maxColumnHeights[i] =  max;				
+				}
+				max = 0;			
+			}		
+			return maxColumnHeights;
+		}
+		
+		//NICOLAS
+		//returns number of unoccupied cells on the board
+		//count underneath every columns max height, do not count empty cells above 
+		private static int numOfEmptyCells(){
+			int emptyCells = 0;
+			maxColumnHeights();
+			for(int i = 0; i < Tetris.COLUMNS; i++){
+				for(int j = Tetris.ROWS - maxColumnHeights[i]; j < Tetris.ROWS ; j++){
+					if(grid[j][i] == -1){
+						emptyCells++;
+					}
+				}
+			}
+			//number of unfilled cells underneath max heights. 
+			return emptyCells;	
+		}
 	
 	
 
