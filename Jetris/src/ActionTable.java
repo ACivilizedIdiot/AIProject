@@ -42,13 +42,12 @@ public class ActionTable {
 		return maxValue;
 	}
 
-	public String getBestMove() {
-		double maxValue = getMaxValue();
+	public String getBestMove(TableEntry rightTable, TableEntry upTable, TableEntry leftTable, TableEntry downTable) {
+		TableEntry[] nextStates = {upTable,leftTable,rightTable,downTable};
 		int moveIndex = 0;
 		for(int i = 0; i < qValues.length; i++){
-			if(maxValue == qValues[i]){
+			if(markovUpdate(qValues[i], nextStates[i].actions.getMaxValue(),i) <= qValues[i]){
 				moveIndex = i;
-				i = qValues.length;
 			}
 		}
 		if(moveIndex == 0){
@@ -63,5 +62,12 @@ public class ActionTable {
 		else {
 			return "Down";
 		}
+	}
+
+	public boolean allZeroes() {
+		if(qValues[0] == 0 && qValues[1] == 0 && qValues[2] == 0 && qValues[3] == 0){
+			return true;
+		}
+		return false;
 	}
 }

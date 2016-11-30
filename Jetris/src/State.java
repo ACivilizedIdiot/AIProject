@@ -5,7 +5,6 @@
 public class State {
 	
 	int[][] grid = new int[Tetris.ROWS][Tetris.COLUMNS];
-	int score = 0;
 	
 	
 	//values to assess utility of state
@@ -13,9 +12,8 @@ public class State {
 	int maxHeight = 0;	//heighest occupied cell in ANY column 
 	int emptyCells = 0;
 		
-	public State(int[][] grid, int score, int empty){
+	public State(int[][] grid, int empty){
 		this.grid = grid;
-		this.score = score;
 		this.emptyCells = empty;
 		
 	}
@@ -25,7 +23,6 @@ public class State {
 		this.maxHeight = maxHeight;
 		this.emptyCells = emptyCells;
 		this.grid = grid;
-		this.score = score;
 		
 	}
 	
@@ -55,7 +52,7 @@ public class State {
 	}
 	
 	public State clone(){
-		return new State(deepClone(grid), score, emptyCells);
+		return new State(deepClone(grid), emptyCells);
 	}
 	
 	public void printState(){
@@ -63,7 +60,7 @@ public class State {
 //		System.out.println("Max Height: " + maxHeight);
 //				System.out.println("Column Height Data: " + Arrays.toString(columnHeights));
 //				System.out.println("Empty Cells: " + emptyCells);
-				System.out.println("Score :" + score);
+				//System.out.println("Score :" + score);
 	}
 	
 	

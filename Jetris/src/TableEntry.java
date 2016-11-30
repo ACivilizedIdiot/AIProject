@@ -25,9 +25,17 @@ public class TableEntry {
 		timesEncountered = 0;
 	}
 
-	public String getBestMove() {
-		return actions.getBestMove();
+	public String getBestMove(TableEntry rightTable, TableEntry upTable, TableEntry leftTable, TableEntry downTable) {
 		
+		return actions.getBestMove(rightTable,upTable,leftTable,downTable);
+		
+	}
+
+	public boolean allZeros() {
+		if(actions.allZeroes()){
+			return true;
+		}
+		return false;
 	}
 
 }

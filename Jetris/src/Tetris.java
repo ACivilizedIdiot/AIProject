@@ -22,10 +22,10 @@ public class Tetris extends Applet {
 	// STATIC MEMBERS
 	//
 	
-	private final int MAX_ITERATIONS = 200;
+	private final int MAX_ITERATIONS = 1000;
 	private int count = 0;
 	private final static int INITIAL_DELAY = 1000;
-	final static byte ROWS = 18;
+	final static byte ROWS = 12;
 	final static byte COLUMNS = 10;
 	private final static int EMPTY = -1;
 	private final static int DELETED_ROWS_PER_LEVEL = 5;
@@ -53,42 +53,42 @@ public class Tetris extends Applet {
 	//   *
 	//   0    1    2    3    4    5    6   	
 	private final static boolean PIECE_BITS[][][] = {
-//		{
-//			{false, true, false, false},
-//			{false, true, false, false},
-//			{false, true, false, false},
-//			{false, true, false, false},
-//		},
-//		{
-//			{false, false, false, false},
-//			{false, true, true, false},
-//			{false, true, false, false},
-//			{false, true, false, false},
-//		},
-//		{
-//			{false, false, false, false},
-//			{false, true, false, false},
-//			{false, true, false, false},
-//			{false, true, true, false},
-//		},
-//		{
-//			{false, false, false, false},
-//			{false, true, false, false},
-//			{false, true, true, false},
-//			{false, false, true, false},
-//		},
-//		{
-//			{false, false, false, false},
-//			{false, false, true, false},
-//			{false, true, true, false},
-//			{false, true, false, false},
-//		},
-//		{
-//			{false, false, false, false},
-//			{false, true, false, false},
-//			{false, true, true, false},
-//			{false, true, false, false},
-//		},
+		{
+			{false, true, false, false},
+			{false, true, false, false},
+			{false, true, false, false},
+			{false, true, false, false},
+		},
+		{
+			{false, false, false, false},
+			{false, true, true, false},
+			{false, true, false, false},
+			{false, true, false, false},
+		},
+		{
+			{false, false, false, false},
+			{false, true, false, false},
+			{false, true, false, false},
+			{false, true, true, false},
+		},
+		{
+			{false, false, false, false},
+			{false, true, false, false},
+			{false, true, true, false},
+			{false, false, true, false},
+		},
+		{
+			{false, false, false, false},
+			{false, false, true, false},
+			{false, true, true, false},
+			{false, true, false, false},
+		},
+		{
+			{false, false, false, false},
+			{false, true, false, false},
+			{false, true, true, false},
+			{false, true, false, false},
+		},
 		{
 			{false, false, false, false},
 			{false, false, false, false},
@@ -223,7 +223,7 @@ public class Tetris extends Applet {
 			for(int i=0; i<4; i++)
 				for(int j=0; j<4; j++)
 					if(squares[i][j] && position.y+i>=0)
-						into[position.y + i][position.x + j] = type;
+						into[position.y + i][position.x + j] = 1;
 		}
 		
 		/**
@@ -494,7 +494,7 @@ public class Tetris extends Applet {
 	//NICOLAS
 	//builds state object based on information about tetris game after the installation of new pieces. 
 	private State buildState(){		
-		currentState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());	
+		currentState = new State(grid, numOfEmptyCells());	
 		currentState.printState();
 		return currentState;
 		
@@ -513,7 +513,7 @@ public class Tetris extends Applet {
 			cur_piece.paste();
 
 			//create UpState for Ai
-		UpState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());
+		UpState = new State(grid, numOfEmptyCells());
 		//undo changes to game
 		if(!check){
 			cur_piece.cut();
@@ -537,7 +537,7 @@ public class Tetris extends Applet {
 		}
 		cur_piece.paste();
 
-		DownState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());
+		DownState = new State(grid, numOfEmptyCells());
 		if(!check){
 			cur_piece.cut();
 			cur_piece.setY(cur_piece.getY() -1); // try to move left
@@ -560,7 +560,7 @@ public class Tetris extends Applet {
 		}
 		cur_piece.paste();
 
-		LeftState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());
+		LeftState = new State(grid, numOfEmptyCells());
 
 		if(!check){
 			//undo action
@@ -589,7 +589,7 @@ public class Tetris extends Applet {
 			}
 			cur_piece.paste();
 
-			RightState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());
+			RightState = new State(grid, numOfEmptyCells());
 			if(!check){
 				cur_piece.cut();
 				cur_piece.setX(cur_piece.getX() - 1); // try to move right
@@ -643,10 +643,12 @@ public class Tetris extends Applet {
 //				// TODO Auto-generated catch block
 //				e.printStackTrace();
 //			}
+			ai.cleanData();
 			newGame();
 			count++;
 		}
 		else{
+			ai.exportTable();
 			System.out.println(ai.recordedData.size());
 		}
 	}
@@ -745,8 +747,7 @@ public class Tetris extends Applet {
 		timer.setPaused(false);
 		gameOver = false;
 		buildState();
-		ai.executeMove(currentState, currentState.score, simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
-
+		ai.executeMove(currentState, Integer.parseInt(score_label.getText()), simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
 	}
 	
 	private void newGame() {
@@ -816,7 +817,7 @@ public class Tetris extends Applet {
 		            
 
 					buildState();	//when the AI/player makes a move, create new state
-					ai.executeMove(currentState, currentState.score, simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
+					ai.executeMove(currentState, Integer.parseInt(score_label.getText()), simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
 
 				}
 				else if (e.getKeyCode() == 38) { //rotate
@@ -832,7 +833,7 @@ public class Tetris extends Applet {
 					System.out.println("ACTION: ROTATE");
 		           
 					buildState();	//when the AI/player makes a move, create new state
-					ai.executeMove(currentState, currentState.score, simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
+					ai.executeMove(currentState, Integer.parseInt(score_label.getText()), simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
 
 				}
 				if (e.getKeyCode() == 40) { //down arrow pressed; drop piece
@@ -850,15 +851,15 @@ public class Tetris extends Applet {
 						if( ! cur_piece.isTotallyOnGrid())
 							gameOver();
 						else {
-							score_label.addValue( ((ROWS - currentState.maxHeight) * 1 )/4);							
-							score_label.addValue((currentState.emptyCells * -1)/4);
+							//score_label.addValue( ((ROWS - currentState.maxHeight) * 1 )/4);							
+							//score_label.addValue((currentState.emptyCells * -1)/4);
 							removeFullRows();
 							installNewPiece();
 						}
 					}
 					
 					buildState();
-					ai.executeMove(currentState, currentState.score, simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
+					ai.executeMove(currentState, Integer.parseInt(score_label.getText()), simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
 
 					
 				}
