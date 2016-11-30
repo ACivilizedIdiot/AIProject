@@ -1,13 +1,16 @@
 import java.awt.AWTException;
 import java.awt.Robot;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Random;
+import java.util.Scanner;
 
 //Class in which all the data from the game passes
 public class TetrisAI {
@@ -23,42 +26,14 @@ public class TetrisAI {
 
 	private int lastScoreValue = 0;
 
-	public TetrisAI() {
-		lookUpTable();
-	}
-
-	private void lookUpTable() {
-		BufferedReader reader = null;
-		String info = "";
-		
-		try {
-			reader = new BufferedReader(new FileReader("table.txt"));
-			while((info += reader.readLine()) != null);
-			
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+	public TetrisAI()  {
+		if(recordedData.isEmpty()){
+			readFile("table.txt");
 		}
-		info.trim();
-		while(info.length() > 0){
-			State state = getState(info);
-			ActionTable actions = getAction(info);
-		}
-		
 	}
 
-	private ActionTable getAction(String info) {
-		
-		return null;
-	}
+	
 
-	private State getState(String info) {
-		// TODO Auto-generated method stub
-		return null;
-	}
 
 	public void executeMove(State current, int newScoreValue, State right, State up, State left, State down) {
 		String move = makeMove(current, newScoreValue, right, up, left, down);
@@ -265,10 +240,82 @@ public class TetrisAI {
 				stateValue += Integer.toString(grid[j][k]);
 			}
 			stateValue += System.getProperty("line.separator");
+			
 		}
 
 		return stateValue;
 	}
+	
+	//reads in state info, action table, table entry objects from text file	
+	public void readFile(String fileName) {
+		State readState = null;
+		TableEntry entry = null;
+		String line = "";
+		Scanner scanner = null;
+		int [] tempRow = new int[Tetris.COLUMNS];
+		int[][] tempGrid = new int[Tetris.ROWS][Tetris.COLUMNS];
+		int i = 0;
+		int j = 0;
+		
+		//read file by line
+		try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+		    while ((line = br.readLine()) != null) {
+					scanner = new Scanner(line);
+					i = 0;
+					//READ IN STATE grid
+				if(line.contains("State:")){
+					for(j = 0; j < Tetris.ROWS; j++){
+						
+						line = br.readLine();	//read next line, first line of grid
+						System.out.println(line);
+						line.trim();
+						
+						for(int k = 0; k < line.length() && i < 10; k++){
+							String ch = line.substring(k, k+1);
+							if(ch.contains("-")){
+								
+							}
+							tempRow[i] = Integer.parseInt(ch);	//read in column values
+						     i++;
+							
+						}
+
+						tempGrid[j] = tempRow;	//add to new grid 
+						System.out.println(Arrays.toString(tempRow));
+					
+					}
+					//state grid is read, create state/table entry object
+					readState = new State(tempGrid);
+					entry = new TableEntry(readState);
+				}	
+				
+				//read in actiontable
+				else if(line.contains("Action:")){
+					line = br.readLine();	//read in first line, UP
+					System.out.println("");
+					entry.actions.setValue("Up", Integer.parseInt(line.replaceAll("[\\D]", "")));
+					line = br.readLine();	//read in first line, LEFT
+					entry.actions.setValue("Left", Integer.parseInt(line.replaceAll("[\\D]", "")));
+					line = br.readLine();	//read in first line, RIGHT
+					entry.actions.setValue("Right", Integer.parseInt(line.replaceAll("[\\D]", "")));
+					line = br.readLine();	//read in first line, DOWN
+					entry.actions.setValue("Down", Integer.parseInt(line.replaceAll("[\\D]", "")));
+
+				
+				}
+				//add this read table entry, action table pair into recorded data 
+				recordedData.add(entry);
+				
+				}
+		    } catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	
+		}
+		
+		
+	
 
 	public void cleanData() {
 		for (int i = 0; i < recordedData.size(); i++) {
