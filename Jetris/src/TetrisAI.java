@@ -17,14 +17,15 @@ public class TetrisAI {
 	ArrayList<TableEntry> recordedData = new ArrayList<TableEntry>();
 
 	private int lastScoreValue = 0;
+	
 
 	public TetrisAI() {
 
 	}
 	
-	public void executeMove(State current, int newScoreValue, State right, State up, State left,
-			State down){
+	public void executeMove(State current, int newScoreValue, State right, State up, State left, State down){
 		String move = makeMove(current, newScoreValue, right, up, left,down);
+		System.out.println(move);
 		Robot AIControl = null;
 		try {
 			AIControl = new Robot();
@@ -34,15 +35,19 @@ public class TetrisAI {
 		}
 		if(move.equals("Up")){
 			AIControl.keyPress(38);
+			System.out.println("AI: UP");
 		}
 		else if(move.equals("Down")){
 			AIControl.keyPress(40);
+			System.out.println("AI: DOWN");
 		}
 		else if(move.equals("Right")){
-			AIControl.keyPress(38);
+			AIControl.keyPress(39);
+			System.out.println("AI: RIGHT");
 		}
 		else if(move.equals("Left")){
 			AIControl.keyPress(37);
+			System.out.println("AI: LEFT");
 		}
 	}
 
