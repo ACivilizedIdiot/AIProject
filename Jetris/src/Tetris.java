@@ -121,7 +121,6 @@ public class Tetris extends Applet {
 	static State LeftState = null;
 	static State RightState = null;
 	static State DownState = null;
-	static int[] maxColumnHeights = new int[COLUMNS];	//used to store max heights for each column (state utility)
 	static boolean gameOver = false;
 	
 	private static int grid[][] = new int[ROWS][COLUMNS];	
@@ -443,58 +442,12 @@ public class Tetris extends Applet {
 	}
 	
 	
-	//NICOLAS
-	//returns maximum height of any column in current state
-	//this will be used for state representation and utility eval
-	private int maxHeight(){
-		int max = 0;
-		 for(int i = 0; i < COLUMNS; i++){
-			 if(max < maxColumnHeights[i]){
-				 max = maxColumnHeights[i];
-			 }
-		 }
-		return max;
-	}
 	
-	//NICOLAS
-	//returns array with max height values for each column
-	//this will be used for state representation and utility eval
-	private static int[] maxColumnHeights(){
-		
-		int max = 0;
-		for(int i = COLUMNS-1; i >= 0; i--){
-			for(int j = ROWS-1; j >= 0; j--){
-				if(grid[j][i] != EMPTY){
-					max = ROWS - j;
-				}
-				maxColumnHeights[i] =  max;				
-			}
-			max = 0;			
-		}		
-		return maxColumnHeights;
-	}
-	
-	//NICOLAS
-	//returns number of unoccupied cells on the board
-	//count underneath every columns max height, do not count empty cells above 
-	private static int numOfEmptyCells(){
-		int emptyCells = 0;
-		maxColumnHeights();
-		for(int i = 0; i < COLUMNS; i++){
-			for(int j = ROWS - maxColumnHeights[i]; j < ROWS ; j++){
-				if(grid[j][i] == EMPTY){
-					emptyCells++;
-				}
-			}
-		}
-		//number of unfilled cells underneath max heights. 
-		return emptyCells;	
-	}
 	
 	//NICOLAS
 	//builds state object based on information about tetris game after the installation of new pieces. 
 	private State buildState(){		
-		currentState = new State(grid, numOfEmptyCells());	
+		currentState = new State(grid);	
 		currentState.printState();
 		return currentState;
 		
@@ -513,7 +466,7 @@ public class Tetris extends Applet {
 			cur_piece.paste();
 
 			//create UpState for Ai
-		UpState = new State(grid, numOfEmptyCells());
+		UpState = new State(grid);
 		//undo changes to game
 		if(!check){
 			cur_piece.cut();
@@ -537,7 +490,7 @@ public class Tetris extends Applet {
 		}
 		cur_piece.paste();
 
-		DownState = new State(grid, numOfEmptyCells());
+		DownState = new State(grid);
 		if(!check){
 			cur_piece.cut();
 			cur_piece.setY(cur_piece.getY() -1); // try to move left
@@ -560,7 +513,7 @@ public class Tetris extends Applet {
 		}
 		cur_piece.paste();
 
-		LeftState = new State(grid, numOfEmptyCells());
+		LeftState = new State(grid);
 
 		if(!check){
 			//undo action
@@ -589,7 +542,7 @@ public class Tetris extends Applet {
 			}
 			cur_piece.paste();
 
-			RightState = new State(grid, numOfEmptyCells());
+			RightState = new State(grid);
 			if(!check){
 				cur_piece.cut();
 				cur_piece.setX(cur_piece.getX() - 1); // try to move right
