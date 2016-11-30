@@ -12,6 +12,23 @@ public class ActionTable {
 		
 	}
 	
+	//used to set values from ai reading in data file
+	public void setValue(String action, double value){
+		if(action.equals("Up")){
+			qValues[0] = value; 
+		}
+		else if(action.equals("Left")){
+			qValues[1] = value;
+		}
+		else if(action.equals("Right")){
+			qValues[2] = value;
+		}
+		else if(action.equals("Down")){
+			qValues[3] = value;
+		}
+	}
+	
+	
 	public void updateValue(String action, double value, double nextTurnQValue){
 		if(action.equals("Up")){
 			qValues[0] = markovUpdate(value, nextTurnQValue, 0); 
