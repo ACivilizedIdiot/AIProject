@@ -1,4 +1,3 @@
-
 //The table for each action of a state
 //This is also where I put the decision making
 public class ActionTable {
