@@ -1,8 +1,8 @@
+
 /*
 Tetris Applet 
 by Melinda Green
 based on Guido Pellegrini's Summer 2000 term project
-
 Use this code for anything you like.
 If you use it in a mission critical application and 
 a bug in this code causes a global nuclear war, I will
@@ -22,9 +22,11 @@ public class Tetris extends Applet {
 	// STATIC MEMBERS
 	//
 	
+	private final int MAX_ITERATIONS = 200;
+	private int count = 0;
 	private final static int INITIAL_DELAY = 1000;
-	private final static byte ROWS = 18;
-	private final static byte COLUMNS = 10;
+	final static byte ROWS = 18;
+	final static byte COLUMNS = 10;
 	private final static int EMPTY = -1;
 	private final static int DELETED_ROWS_PER_LEVEL = 5;
 	private final static Color PIECE_COLORS[] = {
@@ -51,42 +53,42 @@ public class Tetris extends Applet {
 	//   *
 	//   0    1    2    3    4    5    6   	
 	private final static boolean PIECE_BITS[][][] = {
-		{
-			{false, true, false, false},
-			{false, true, false, false},
-			{false, true, false, false},
-			{false, true, false, false},
-		},
-		{
-			{false, false, false, false},
-			{false, true, true, false},
-			{false, true, false, false},
-			{false, true, false, false},
-		},
-		{
-			{false, false, false, false},
-			{false, true, false, false},
-			{false, true, false, false},
-			{false, true, true, false},
-		},
-		{
-			{false, false, false, false},
-			{false, true, false, false},
-			{false, true, true, false},
-			{false, false, true, false},
-		},
-		{
-			{false, false, false, false},
-			{false, false, true, false},
-			{false, true, true, false},
-			{false, true, false, false},
-		},
-		{
-			{false, false, false, false},
-			{false, true, false, false},
-			{false, true, true, false},
-			{false, true, false, false},
-		},
+//		{
+//			{false, true, false, false},
+//			{false, true, false, false},
+//			{false, true, false, false},
+//			{false, true, false, false},
+//		},
+//		{
+//			{false, false, false, false},
+//			{false, true, true, false},
+//			{false, true, false, false},
+//			{false, true, false, false},
+//		},
+//		{
+//			{false, false, false, false},
+//			{false, true, false, false},
+//			{false, true, false, false},
+//			{false, true, true, false},
+//		},
+//		{
+//			{false, false, false, false},
+//			{false, true, false, false},
+//			{false, true, true, false},
+//			{false, false, true, false},
+//		},
+//		{
+//			{false, false, false, false},
+//			{false, false, true, false},
+//			{false, true, true, false},
+//			{false, true, false, false},
+//		},
+//		{
+//			{false, false, false, false},
+//			{false, true, false, false},
+//			{false, true, true, false},
+//			{false, true, false, false},
+//		},
 		{
 			{false, false, false, false},
 			{false, false, false, false},
@@ -96,7 +98,7 @@ public class Tetris extends Applet {
 	};
 	private static boolean tmp_grid[][] = new boolean[4][4]; // scratch space
 	private static Random random = new Random();
-	private TetrisAI ai = new TetrisAI();
+	TetrisAI ai = new TetrisAI();
 	
 	private static class TetrisLabel extends Label {
 		private final static Font LABEL_FONT = new Font("Serif", Font.BOLD, 18);
@@ -107,30 +109,33 @@ public class Tetris extends Applet {
 		private void addValue(int val) {
 			setText(Integer.toString((Integer.parseInt(getText())) + val ));
 		}
-		
-		public int getValue(){
-			String value = getText();
-			int intValue = Integer.parseInt(value);
-			return intValue;
-		}
 	}
 	
 	//
 	// INSTANCE DATA
 	//
 		
-	private int grid[][] = new int[ROWS][COLUMNS];
+	
+	static State currentState = null;	//used for storing games current state
+	static State UpState = null;		//rest are used for storing simulated game states from the current game state
+	static State LeftState = null;
+	static State RightState = null;
+	static State DownState = null;
+	static int[] maxColumnHeights = new int[COLUMNS];	//used to store max heights for each column (state utility)
+	static boolean gameOver = false;
+	
+	private static int grid[][] = new int[ROWS][COLUMNS];	
 	private int next_piece_grid[][] = new int[4][4];
 	private int num_rows_deleted = 0;
 	private GridCanvas game_grid = new GridCanvas(grid, true);
 	private GridCanvas next_piece_canvas = new GridCanvas(next_piece_grid, false);
-	private Timer timer;
-	private TetrisPiece cur_piece;
+	private static Timer timer;
+	private static TetrisPiece cur_piece;
 	private TetrisPiece next_piece = randomPiece();
 	private TetrisSound sounds;// = new TetrisSound(this);
 	private TetrisLabel rows_deleted_label = new TetrisLabel("0");
 	private TetrisLabel level_label = new TetrisLabel("1");
-	private TetrisLabel score_label = new TetrisLabel("0");
+	private static TetrisLabel score_label = new TetrisLabel("0");
 	private TetrisLabel high_score_label = new TetrisLabel("");
 	final Button start_newgame_butt = new TetrisButton("Start");
 	final Button pause_resume_butt = new TetrisButton("Pause");									
@@ -305,7 +310,6 @@ public class Tetris extends Applet {
 		public void run() {
 			while(true) {
 				try { 
-					//So far is going to be the place where the AI runs
 					sleep(m_fast ? 30 : m_delay); 
 				} catch (Exception e) {}
 				if(m_paused) {
@@ -435,25 +439,195 @@ public class Tetris extends Applet {
 	
 	private TetrisPiece randomPiece() {
 		int rand = Math.abs(random.nextInt());
-		return new TetrisPiece(rand % (PIECE_COLORS.length));
+		return new TetrisPiece(rand % (PIECE_BITS.length));
 	}
 	
+	
+	//NICOLAS
+	//returns maximum height of any column in current state
+	//this will be used for state representation and utility eval
+	private int maxHeight(){
+		int max = 0;
+		 for(int i = 0; i < COLUMNS; i++){
+			 if(max < maxColumnHeights[i]){
+				 max = maxColumnHeights[i];
+			 }
+		 }
+		return max;
+	}
+	
+	//NICOLAS
+	//returns array with max height values for each column
+	//this will be used for state representation and utility eval
+	private static int[] maxColumnHeights(){
+		
+		int max = 0;
+		for(int i = COLUMNS-1; i >= 0; i--){
+			for(int j = ROWS-1; j >= 0; j--){
+				if(grid[j][i] != EMPTY){
+					max = ROWS - j;
+				}
+				maxColumnHeights[i] =  max;				
+			}
+			max = 0;			
+		}		
+		return maxColumnHeights;
+	}
+	
+	//NICOLAS
+	//returns number of unoccupied cells on the board
+	//count underneath every columns max height, do not count empty cells above 
+	private static int numOfEmptyCells(){
+		int emptyCells = 0;
+		maxColumnHeights();
+		for(int i = 0; i < COLUMNS; i++){
+			for(int j = ROWS - maxColumnHeights[i]; j < ROWS ; j++){
+				if(grid[j][i] == EMPTY){
+					emptyCells++;
+				}
+			}
+		}
+		//number of unfilled cells underneath max heights. 
+		return emptyCells;	
+	}
+	
+	//NICOLAS
+	//builds state object based on information about tetris game after the installation of new pieces. 
+	private State buildState(){		
+		currentState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());	
+		currentState.printState();
+		return currentState;
+		
+	}
+	
+	//simulate up action in current state
+	private static State simulateUpState(){
+		boolean check = false;
+		//alter the game from the current state with action UP
+			cur_piece.cut();
+			cur_piece.rotate();
+			if( ! cur_piece.canPaste()){
+				check = true;
+				cur_piece.rotateBack();
+			}
+			cur_piece.paste();
+
+			//create UpState for Ai
+		UpState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());
+		//undo changes to game
+		if(!check){
+			cur_piece.cut();
+			cur_piece.rotateBack();
+			cur_piece.paste();
+		}
+		
+		//grid = currentState.getGrid();
+		return UpState;
+		
+	}
+	
+	//simulate Down action in current state
+	private static State simulateDownState(){
+		boolean check = false;
+		cur_piece.cut();
+		cur_piece.setY(cur_piece.getY() +1); // try to move left
+		if( ! cur_piece.canPaste()){
+			cur_piece.setY(cur_piece.getY() -1); // undo move left 
+			check = true;
+		}
+		cur_piece.paste();
+
+		DownState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());
+		if(!check){
+			cur_piece.cut();
+			cur_piece.setY(cur_piece.getY() -1); // try to move left
+			cur_piece.paste();
+		}
+		
+		//reset game to current state grid to undo action DOWN 
+		//grid = currentState.getGrid();
+		return DownState;
+	}
+	
+	//simulate Left action in current state
+	private static State simulateLeftState(){
+		boolean check = false;
+		cur_piece.cut();
+		cur_piece.setX(cur_piece.getX() -1); // try to move left
+		if( ! cur_piece.canPaste()){
+			cur_piece.setX(cur_piece.getX() +1); // undo move left 
+			check = true;
+		}
+		cur_piece.paste();
+
+		LeftState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());
+
+		if(!check){
+			//undo action
+			cur_piece.cut();
+			cur_piece.setX(cur_piece.getX() +1); // try to move left
+			cur_piece.paste();
+		}
+		
+		
+		
+
+		//grid = currentState.getGrid();
+		return LeftState;
+		
+	}
+	
+	//simulate Right action in current state
+		private static State simulateRightState(){
+			boolean check = false;
+			cur_piece.cut();
+			cur_piece.setX(cur_piece.getX() + 1); // try to move right
+			if( ! cur_piece.canPaste()){
+
+				cur_piece.setX(cur_piece.getX() - 1); // undo move right
+				check = true;
+			}
+			cur_piece.paste();
+
+			RightState = new State(grid, Integer.parseInt(score_label.getText()), numOfEmptyCells());
+			if(!check){
+				cur_piece.cut();
+				cur_piece.setX(cur_piece.getX() - 1); // try to move right
+				cur_piece.paste();
+
+			}
+			
+			
+			//undo action
+			//grid = currentState.getGrid();
+			return RightState;
+			
+		}
+	
 	private void installNewPiece() {
+	
+		
+		
 		next_piece_canvas.clear();
 		cur_piece = next_piece;
 		cur_piece.setPosition(3, -4); //-4 to start above top of grid
+		
 		if(cur_piece.canPaste()) {
 			next_piece = randomPiece();
 			next_piece.setPosition(0, 0);
 			next_piece.paste(next_piece_grid);
-			next_piece_canvas.repaint();
+			next_piece_canvas.repaint();	
+			
 		}
-		else
+		else{
 			gameOver();
+		}
+		
 	}
 	
 	private void gameOver() {
 		System.out.println("Game Over!");
+		gameOver = true;
 		timer.setPaused(true);
 		pause_resume_butt.setEnabled(false);
 		int score = Integer.parseInt(score_label.getText());
@@ -462,7 +636,19 @@ public class Tetris extends Applet {
 		if(score > high_score)
 			high_score_label.setText("" + score);
 		sounds.playGameOverSound();
-		newGame();
+		if(count < MAX_ITERATIONS){
+//			try {
+//				Thread.sleep(1000);
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+			newGame();
+			count++;
+		}
+		else{
+			System.out.println(ai.recordedData.size());
+		}
 	}
 	
 	private boolean rowIsFull(int row) {
@@ -471,6 +657,8 @@ public class Tetris extends Applet {
 				return false;
 		return true;
 	}
+	
+	
 	
 	private int countFullRows() {
 		int n_full_rows = 0;
@@ -488,11 +676,12 @@ public class Tetris extends Applet {
 				grid[i][j] = grid[i-1][j];
 			}
 		}
+		currentState.grid = grid;
 	}
 	
 	private void removeFullRows() {
 		int n_full = countFullRows();
-		score_label.addValue((int)(10 * Math.pow(2, n_full) - 10)); //give points exponentially
+		score_label.addValue((int)(1000 * Math.pow(2, n_full) - 1000)); //give points exponentially
 		if(n_full == 0)
 		return;
 		sounds.playDestroyRows(n_full);
@@ -530,7 +719,9 @@ public class Tetris extends Applet {
 						}
 					}
 				}
+				
 				game_grid.repaint();
+				
 			}
 		});
 		timer.start(); // pauses immediately
@@ -546,18 +737,16 @@ public class Tetris extends Applet {
 	
 	private void startGame() {
 		timer.setDelay(INITIAL_DELAY);
-		timer.setPaused(false);
 		start_newgame_butt.setLabel("Start New Game");
 		pause_resume_butt.setEnabled(true); // stays enabled from here on
 		pause_resume_butt.setLabel("Pause");
 		pause_resume_butt.validate();
 		sounds.playSoundtrack();
-		State current = null;
-		State right = null;
-		State left = null;
-		State up = null;
-		State down = null;
-		ai.executeMove(current, score_label.getValue(), right, up, left, down);
+		timer.setPaused(false);
+		gameOver = false;
+		buildState();
+		ai.executeMove(currentState, currentState.score, simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
+
 	}
 	
 	private void newGame() {
@@ -589,10 +778,14 @@ public class Tetris extends Applet {
 		pause_resume_butt.setEnabled(false);
 		start_newgame_butt.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent ae) {
-				if(start_newgame_butt.getLabel().equals("Start"))
+				if(start_newgame_butt.getLabel().equals("Start")){
+					count = 0;
 					startGame();
-				else
+				}
+				else{
+					count = 0;
 					newGame();
+				}
 			}
 		});		
 		pause_resume_butt.addActionListener(new ActionListener() {
@@ -607,7 +800,7 @@ public class Tetris extends Applet {
 		//create key listener for rotating, moving left, moving right
 		KeyListener key_listener = new KeyAdapter() {
 			public void keyPressed(KeyEvent e) {
-				if(timer.isPaused()) //don't do anything if game is paused
+				if(timer.isPaused() || gameOver) //don't do anything if game is paused
 					return;
 				if (e.getKeyCode() == 37 || e.getKeyCode() == 39) { //left or right arrow pressed
 					int dir = e.getKeyCode() == 37 ? -1 : 1;
@@ -619,14 +812,15 @@ public class Tetris extends Applet {
 						cur_piece.paste();
 					}
 					game_grid.repaint();
-					State current = null;
-					State right = null;
-					State left = null;
-					State up = null;
-					State down = null;
-					ai.executeMove(current, score_label.getValue(), right, up, left, down);
+					System.out.println("ACTION: LEFT/RIGHT");
+		            
+
+					buildState();	//when the AI/player makes a move, create new state
+					ai.executeMove(currentState, currentState.score, simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
+
 				}
 				else if (e.getKeyCode() == 38) { //rotate
+					
 					synchronized(timer) {
 						cur_piece.cut();
 						cur_piece.rotate();
@@ -635,21 +829,38 @@ public class Tetris extends Applet {
 						cur_piece.paste();
 					}
 					game_grid.repaint();
-					State current = null;
-					State right = null;
-					State left = null;
-					State up = null;
-					State down = null;
-					ai.executeMove(current, score_label.getValue(), right, up, left, down);
+					System.out.println("ACTION: ROTATE");
+		           
+					buildState();	//when the AI/player makes a move, create new state
+					ai.executeMove(currentState, currentState.score, simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
+
 				}
 				if (e.getKeyCode() == 40) { //down arrow pressed; drop piece
-					timer.setFast(true);
-					State current = null;
-					State right = null;
-					State left = null;
-					State up = null;
-					State down = null;
-					ai.executeMove(current, score_label.getValue(), right, up, left, down);
+					if(cur_piece.canStepDown()){
+						cur_piece.cut();
+						cur_piece.setY(cur_piece.getY() +1); // try to move left
+					
+						cur_piece.paste();
+						game_grid.repaint();
+						
+						System.out.println("ACTION: DROP");
+			            
+					}
+					else{
+						if( ! cur_piece.isTotallyOnGrid())
+							gameOver();
+						else {
+							score_label.addValue( ((ROWS - currentState.maxHeight) * 1 )/4);							
+							score_label.addValue((currentState.emptyCells * -1)/4);
+							removeFullRows();
+							installNewPiece();
+						}
+					}
+					
+					buildState();
+					ai.executeMove(currentState, currentState.score, simulateRightState(), simulateUpState(), simulateLeftState(), simulateDownState());
+
+					
 				}
 			}
 		};
@@ -698,16 +909,17 @@ public class Tetris extends Applet {
 
 	
 	public static void main(String[] args) {
-
+				
 		Frame frame = new Frame("Tetris");
 		Tetris tetris = new Tetris();
 		frame.add(tetris);
 		tetris.init();
 		tetris.start();
 		
-		//Dustin's meddling starts here
+
 		
-		TetrisAI ai = new TetrisAI();
+		//while the game isnt over, continue to make moves and learn 
+		
 
 		frame.addWindowListener(new WindowAdapter() {
 			public void windowClosing(WindowEvent e) {
@@ -768,4 +980,3 @@ class DoubleBufferedCanvas extends Canvas {
 		mSystemGraphics.drawImage(mActiveOffscreenImage, 0, 0, null);
 	}
 }
-
